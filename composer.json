@@ -1,0 +1,40 @@
+{
+  "name": "lookyman/chronicle-api",
+  "description": "Client library for interacting with Chronicle",
+  "keywords": ["Chronicle", "API"],
+  "license": "MIT",
+  "require": {
+    "php": "^7.0",
+    "roave/security-advisories": "dev-master",
+    "php-http/httplug": "^1.1",
+    "paragonie/sapient": "^1.0"
+  },
+  "require-dev": {
+    "jakub-onderka/php-parallel-lint": "^0.9.2",
+    "lookyman/coding-standard": "^0.0.5",
+    "phpstan/phpstan": "^0.7",
+    "phpunit/phpunit": "^6.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Lookyman\\Chronicle\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Lookyman\\Chronicle\\": "tests/"
+    }
+  },
+  "scripts": {
+    "lint": "parallel-lint ./src ./tests",
+    "cs": "phpcs --colors --extensions=php --encoding=utf-8 -sp ./src ./tests",
+    "tests": "phpunit --coverage-text",
+    "stan": "phpstan analyse -l 7 -c ./phpstan.neon ./src ./tests",
+    "check": [
+      "@lint",
+      "@cs",
+      "@tests",
+      "@stan"
+    ]
+  }
+}
