@@ -259,6 +259,28 @@ final class ApiTest extends TestCase
 		$this->api->register(new SigningPublicKey($decodedPublicKey));
 	}
 
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testRegisterClientIdNotSet()
+	{
+		$adapter = $this->createMock(AdapterMock::class);
+		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($adapter);
+		$this->api = new Api(
+			$this->sapient,
+			$this->client,
+			$this->signingSecretKey,
+			$this->chroniclePublicKey,
+			'uri'
+		);
+
+		/** @var string $decodedPublicKey */
+		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
+		$publicKey = new SigningPublicKey($decodedPublicKey);
+
+		$this->api->register($publicKey);
+	}
+
 	public function testRegister()
 	{
 		$request = $this->createMock(RequestInterface::class);
@@ -306,6 +328,28 @@ final class ApiTest extends TestCase
 		$this->api->revoke('id', new SigningPublicKey($decodedPublicKey));
 	}
 
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testRevokeClientIdNotSet()
+	{
+		$adapter = $this->createMock(AdapterMock::class);
+		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($adapter);
+		$this->api = new Api(
+			$this->sapient,
+			$this->client,
+			$this->signingSecretKey,
+			$this->chroniclePublicKey,
+			'uri'
+		);
+
+		/** @var string $decodedPublicKey */
+		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
+		$publicKey = new SigningPublicKey($decodedPublicKey);
+
+		$this->api->revoke('id', $publicKey);
+	}
+
 	public function testRevoke()
 	{
 		$request = $this->createMock(RequestInterface::class);
@@ -348,6 +392,24 @@ final class ApiTest extends TestCase
 	public function testPublishInvalidAdapter()
 	{
 		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
+		$this->api->publish('foo');
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testPublishClientIdNotSet()
+	{
+		$adapter = $this->createMock(AdapterMock::class);
+		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($adapter);
+		$this->api = new Api(
+			$this->sapient,
+			$this->client,
+			$this->signingSecretKey,
+			$this->chroniclePublicKey,
+			'uri'
+		);
+
 		$this->api->publish('foo');
 	}
 
