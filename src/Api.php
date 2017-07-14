@@ -9,6 +9,7 @@ use ParagonIE\Sapient\Adapter\ConvenienceInterface;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 use ParagonIE\Sapient\Sapient;
+use Psr\Http\Message\RequestInterface;
 
 final class Api implements ApiInterface
 {
@@ -146,19 +147,21 @@ final class Api implements ApiInterface
 		}
 		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
+		/** @var RequestInterface $request */
+		$request = $adapter->createSignedJsonRequest(
+			'POST',
+			\sprintf('%s/chronicle/register', $this->chronicleUri),
+			[
+				'publickey' => $publicKey->getString(),
+				'comment' => $comment,
+			],
+			$this->signingSecretKey
+		)->withAddedHeader(
+			self::CHRONICLE_CLIENT_KEY_ID,
+			$this->chronicleClientId
+		);
 		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedJsonRequest(
-				'POST',
-				\sprintf('%s/chronicle/register', $this->chronicleUri),
-				[
-					'publickey' => $publicKey->getString(),
-					'comment' => $comment,
-				],
-				$this->signingSecretKey
-			)->withAddedHeader(
-				self::CHRONICLE_CLIENT_KEY_ID,
-				$this->chronicleClientId
-			)),
+			$this->client->sendRequest($request),
 			$this->chroniclePublicKey
 		);
 	}
@@ -170,19 +173,21 @@ final class Api implements ApiInterface
 		}
 		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
+		/** @var RequestInterface $request */
+		$request = $adapter->createSignedJsonRequest(
+			'POST',
+			\sprintf('%s/chronicle/revoke', $this->chronicleUri),
+			[
+				'clientid' => $clientId,
+				'publickey' => $publicKey->getString(),
+			],
+			$this->signingSecretKey
+		)->withAddedHeader(
+			self::CHRONICLE_CLIENT_KEY_ID,
+			$this->chronicleClientId
+		);
 		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedJsonRequest(
-				'POST',
-				\sprintf('%s/chronicle/revoke', $this->chronicleUri),
-				[
-					'clientid' => $clientId,
-					'publickey' => $publicKey->getString(),
-				],
-				$this->signingSecretKey
-			)->withAddedHeader(
-				self::CHRONICLE_CLIENT_KEY_ID,
-				$this->chronicleClientId
-			)),
+			$this->client->sendRequest($request),
 			$this->chroniclePublicKey
 		);
 	}
@@ -194,16 +199,18 @@ final class Api implements ApiInterface
 		}
 		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
+		/** @var RequestInterface $request */
+		$request = $adapter->createSignedRequest(
+			'POST',
+			\sprintf('%s/chronicle/publish', $this->chronicleUri),
+			$message,
+			$this->signingSecretKey
+		)->withAddedHeader(
+			self::CHRONICLE_CLIENT_KEY_ID,
+			$this->chronicleClientId
+		);
 		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'POST',
-				\sprintf('%s/chronicle/publish', $this->chronicleUri),
-				$message,
-				$this->signingSecretKey
-			)->withAddedHeader(
-				self::CHRONICLE_CLIENT_KEY_ID,
-				$this->chronicleClientId
-			)),
+			$this->client->sendRequest($request),
 			$this->chroniclePublicKey
 		);
 	}
