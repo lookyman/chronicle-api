@@ -6,6 +6,7 @@ namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
 use PHPUnit\Framework\TestCase;
+use ParagonIE\Sapient\Adapter\AdapterInterface;
 use ParagonIE\Sapient\Adapter\Guzzle;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
@@ -57,6 +58,23 @@ final class ReplicaTest extends TestCase
 		$this->client = $this->createMock(HttpClient::class);
 		$this->signingSecretKey = $this->createMock(SigningSecretKey::class);
 		$this->chroniclePublicKey = $this->createMock(SigningPublicKey::class);
+		$this->replica = new Replica(
+			$this->sapient,
+			$this->client,
+			$this->signingSecretKey,
+			$this->chroniclePublicKey,
+			'uri',
+			1
+		);
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testInvalidAdapter()
+	{
+		$this->sapient = $this->createMock(Sapient::class);
+		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
 		$this->replica = new Replica(
 			$this->sapient,
 			$this->client,

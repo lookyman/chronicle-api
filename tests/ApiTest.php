@@ -7,6 +7,7 @@ namespace Lookyman\Chronicle;
 use Http\Client\HttpClient;
 use PHPUnit\Framework\TestCase;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\Sapient\Adapter\AdapterInterface;
 use ParagonIE\Sapient\Adapter\Guzzle;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
@@ -65,6 +66,22 @@ final class ApiTest extends TestCase
 			$this->chroniclePublicKey,
 			'uri',
 			'clientId'
+		);
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testInvalidAdapter()
+	{
+		$this->sapient = $this->createMock(Sapient::class);
+		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
+		$this->api = new Api(
+			$this->sapient,
+			$this->client,
+			$this->signingSecretKey,
+			$this->chroniclePublicKey,
+			'uri'
 		);
 	}
 
