@@ -6,7 +6,6 @@ namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
 use PHPUnit\Framework\TestCase;
-use ParagonIE\Sapient\Adapter\AdapterInterface;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 use ParagonIE\Sapient\Sapient;
@@ -18,6 +17,11 @@ use Psr\Http\Message\ResponseInterface;
  */
 final class ReplicaTest extends TestCase
 {
+
+	/**
+	 * @var \PHPUnit_Framework_MockObject_MockObject
+	 */
+	private $adapter;
 
 	/**
 	 * @var \PHPUnit_Framework_MockObject_MockObject
@@ -46,7 +50,9 @@ final class ReplicaTest extends TestCase
 
 	protected function setUp()
 	{
+		$this->adapter = $this->createMock(AdapterMock::class);
 		$this->sapient = $this->createMock(Sapient::class);
+		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->adapter);
 		$this->client = $this->createMock(HttpClient::class);
 		$this->signingSecretKey = $this->createMock(SigningSecretKey::class);
 		$this->chroniclePublicKey = $this->createMock(SigningPublicKey::class);
@@ -60,47 +66,20 @@ final class ReplicaTest extends TestCase
 		);
 	}
 
-	/**
-	 * @dataProvider implementsInterfaceProvider
-	 */
-	public function testImplementsInterface(string $interface)
-	{
-		$ref = new \ReflectionClass(Replica::class);
-		self::assertTrue($ref->implementsInterface($interface));
-	}
-
-	public function implementsInterfaceProvider(): array
-	{
-		return [
-			'common endpoint' => [CommonEndpointInterface::class],
-		];
-	}
-
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testLastHashInvalidAdapter()
-	{
-		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->replica->lastHash();
-	}
-
 	public function testLastHash()
 	{
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
 
-		$adapter = $this->createMock(AdapterMock::class);
-		$adapter->expects(self::once())->method('createSignedRequest')->with(
+		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
 			'GET',
 			'uri/chronicle/replica/1/lasthash',
 			'',
 			$this->signingSecretKey
 		)->willReturn($request);
 
-		$this->sapient->expects(self::at(0))->method('getAdapter')->willReturn($adapter);
-		$this->sapient->expects(self::at(1))->method('decodeSignedJsonResponse')->with(
+		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
 			$response,
 			$this->chroniclePublicKey
 		)->willReturn(['result']);
@@ -110,31 +89,20 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $this->replica->lastHash());
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testLookupInvalidAdapter()
-	{
-		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->replica->lookup('');
-	}
-
 	public function testLookup()
 	{
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
 
-		$adapter = $this->createMock(AdapterMock::class);
-		$adapter->expects(self::once())->method('createSignedRequest')->with(
+		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
 			'GET',
 			'uri/chronicle/replica/1/lookup/foo',
 			'',
 			$this->signingSecretKey
 		)->willReturn($request);
 
-		$this->sapient->expects(self::at(0))->method('getAdapter')->willReturn($adapter);
-		$this->sapient->expects(self::at(1))->method('decodeSignedJsonResponse')->with(
+		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
 			$response,
 			$this->chroniclePublicKey
 		)->willReturn(['result']);
@@ -144,31 +112,20 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $this->replica->lookup('foo'));
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testSinceInvalidAdapter()
-	{
-		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->replica->since('');
-	}
-
 	public function testSince()
 	{
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
 
-		$adapter = $this->createMock(AdapterMock::class);
-		$adapter->expects(self::once())->method('createSignedRequest')->with(
+		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
 			'GET',
 			'uri/chronicle/replica/1/since/foo',
 			'',
 			$this->signingSecretKey
 		)->willReturn($request);
 
-		$this->sapient->expects(self::at(0))->method('getAdapter')->willReturn($adapter);
-		$this->sapient->expects(self::at(1))->method('decodeSignedJsonResponse')->with(
+		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
 			$response,
 			$this->chroniclePublicKey
 		)->willReturn(['result']);
@@ -178,31 +135,20 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $this->replica->since('foo'));
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testExportInvalidAdapter()
-	{
-		$this->sapient->expects(self::once())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->replica->export();
-	}
-
 	public function testExport()
 	{
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
 
-		$adapter = $this->createMock(AdapterMock::class);
-		$adapter->expects(self::once())->method('createSignedRequest')->with(
+		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
 			'GET',
 			'uri/chronicle/replica/1/export',
 			'',
 			$this->signingSecretKey
 		)->willReturn($request);
 
-		$this->sapient->expects(self::at(0))->method('getAdapter')->willReturn($adapter);
-		$this->sapient->expects(self::at(1))->method('decodeSignedJsonResponse')->with(
+		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
 			$response,
 			$this->chroniclePublicKey
 		)->willReturn(['result']);

@@ -52,6 +52,9 @@ final class Replica implements CommonEndpointInterface
 		int $source
 	) {
 		$this->sapient = $sapient;
+		if (!$this->sapient->getAdapter() instanceof ConvenienceInterface) {
+			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
+		}
 		$this->client = $client;
 		$this->signingSecretKey = $signingSecretKey;
 		$this->chroniclePublicKey = $chroniclePublicKey;
@@ -61,10 +64,8 @@ final class Replica implements CommonEndpointInterface
 
 	public function lastHash(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -78,10 +79,8 @@ final class Replica implements CommonEndpointInterface
 
 	public function lookup(string $hash): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -95,10 +94,8 @@ final class Replica implements CommonEndpointInterface
 
 	public function since(string $hash): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -112,10 +109,8 @@ final class Replica implements CommonEndpointInterface
 
 	public function export(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',

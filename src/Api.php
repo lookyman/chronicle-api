@@ -54,6 +54,9 @@ final class Api implements ApiInterface
 		string $chronicleClientId = null
 	) {
 		$this->sapient = $sapient;
+		if (!$this->sapient->getAdapter() instanceof ConvenienceInterface) {
+			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
+		}
 		$this->client = $client;
 		$this->signingSecretKey = $signingSecretKey;
 		$this->chroniclePublicKey = $chroniclePublicKey;
@@ -63,10 +66,8 @@ final class Api implements ApiInterface
 
 	public function lastHash(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -80,10 +81,8 @@ final class Api implements ApiInterface
 
 	public function lookup(string $hash): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -97,10 +96,8 @@ final class Api implements ApiInterface
 
 	public function since(string $hash): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -114,10 +111,8 @@ final class Api implements ApiInterface
 
 	public function export(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -131,10 +126,8 @@ final class Api implements ApiInterface
 
 	public function index(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
@@ -148,13 +141,11 @@ final class Api implements ApiInterface
 
 	public function register(SigningPublicKey $publicKey, string $comment = null): array
 	{
-		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		if ($this->chronicleClientId === null) {
 			throw new \InvalidArgumentException('Client id was not set.');
 		}
+		/** @var ConvenienceInterface $adapter */
+		$adapter = $this->sapient->getAdapter();
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedJsonRequest(
 				'POST',
@@ -174,13 +165,11 @@ final class Api implements ApiInterface
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
-		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		if ($this->chronicleClientId === null) {
 			throw new \InvalidArgumentException('Client id was not set.');
 		}
+		/** @var ConvenienceInterface $adapter */
+		$adapter = $this->sapient->getAdapter();
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedJsonRequest(
 				'POST',
@@ -200,13 +189,11 @@ final class Api implements ApiInterface
 
 	public function publish(string $message): array
 	{
-		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		if ($this->chronicleClientId === null) {
 			throw new \InvalidArgumentException('Client id was not set.');
 		}
+		/** @var ConvenienceInterface $adapter */
+		$adapter = $this->sapient->getAdapter();
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'POST',
@@ -235,10 +222,8 @@ final class Api implements ApiInterface
 
 	public function replicas(): array
 	{
+		/** @var ConvenienceInterface $adapter */
 		$adapter = $this->sapient->getAdapter();
-		if (!$adapter instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		return $this->sapient->decodeSignedJsonResponse(
 			$this->client->sendRequest($adapter->createSignedRequest(
 				'GET',
