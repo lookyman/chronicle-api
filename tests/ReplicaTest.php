@@ -5,14 +5,11 @@ declare(strict_types = 1);
 namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
+use Interop\Http\Factory\RequestFactoryInterface;
 use PHPUnit\Framework\TestCase;
-use ParagonIE\Sapient\Adapter\AdapterInterface;
-use ParagonIE\Sapient\Adapter\Guzzle;
-use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
-use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
-use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * @covers \Lookyman\Chronicle\Replica
@@ -20,161 +17,120 @@ use Psr\Http\Message\ResponseInterface;
 final class ReplicaTest extends TestCase
 {
 
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $adapter;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $sapient;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $client;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $signingSecretKey;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $chroniclePublicKey;
-
-	/**
-	 * @var Replica
-	 */
-	private $replica;
-
-	protected function setUp()
-	{
-		$this->adapter = $this->createMock(Guzzle::class);
-		$this->sapient = $this->createMock(Sapient::class);
-		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->adapter);
-		$this->client = $this->createMock(HttpClient::class);
-		$this->signingSecretKey = $this->createMock(SigningSecretKey::class);
-		$this->chroniclePublicKey = $this->createMock(SigningPublicKey::class);
-		$this->replica = new Replica(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
-			'uri',
-			1
-		);
-	}
-
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testInvalidAdapter()
-	{
-		$this->sapient = $this->createMock(Sapient::class);
-		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->replica = new Replica(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
-			'uri',
-			1
-		);
-	}
-
 	public function testLastHash()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/lasthash',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/replica/1/lasthash'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$replica = new Replica(
+			$client,
+			$requestFactory,
+			'uri',
+			1
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->replica->lastHash());
+		self::assertEquals(['result'], $replica->lastHash());
 	}
 
 	public function testLookup()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/lookup/foo',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/replica/1/lookup/foo'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$replica = new Replica(
+			$client,
+			$requestFactory,
+			'uri',
+			1
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->replica->lookup('foo'));
+		self::assertEquals(['result'], $replica->lookup('foo'));
 	}
 
 	public function testSince()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/since/foo',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/replica/1/since/foo'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$replica = new Replica(
+			$client,
+			$requestFactory,
+			'uri',
+			1
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->replica->since('foo'));
+		self::assertEquals(['result'], $replica->since('foo'));
 	}
 
 	public function testExport()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/export',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/replica/1/export'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$replica = new Replica(
+			$client,
+			$requestFactory,
+			'uri',
+			1
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->replica->export());
+		self::assertEquals(['result'], $replica->export());
 	}
 
 }

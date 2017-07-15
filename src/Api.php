@@ -5,10 +5,11 @@ declare(strict_types = 1);
 namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
-use ParagonIE\Sapient\Adapter\ConvenienceInterface;
+use Interop\Http\Factory\RequestFactoryInterface;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\Sapient\Adapter\Generic\Stream;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
-use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\RequestInterface;
 
 final class Api implements ApiInterface
@@ -16,10 +17,7 @@ final class Api implements ApiInterface
 
 	const CHRONICLE_CLIENT_KEY_ID = 'Chronicle-Client-Key-ID';
 
-	/**
-	 * @var Sapient
-	 */
-	private $sapient;
+	const HEADER_SIGNATURE_NAME = 'Body-Signature-Ed25519';
 
 	/**
 	 * @var HttpClient
@@ -27,14 +25,9 @@ final class Api implements ApiInterface
 	private $client;
 
 	/**
-	 * @var SigningSecretKey
+	 * @var RequestFactoryInterface
 	 */
-	private $signingSecretKey;
-
-	/**
-	 * @var SigningPublicKey
-	 */
-	private $chroniclePublicKey;
+	private $requestFactory;
 
 	/**
 	 * @var string
@@ -42,186 +35,171 @@ final class Api implements ApiInterface
 	private $chronicleUri;
 
 	/**
+	 * @var SigningSecretKey|null
+	 */
+	private $signingSecretKey;
+
+	/**
 	 * @var string|null
 	 */
 	private $chronicleClientId;
 
-	public function __construct(
-		Sapient $sapient,
-		HttpClient $client,
-		SigningSecretKey $signingSecretKey,
-		SigningPublicKey $chroniclePublicKey,
-		string $chronicleUri,
-		string $chronicleClientId = null
-	) {
-		$this->sapient = $sapient;
-		if (!$this->sapient->getAdapter() instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
+	public function __construct(HttpClient $client, RequestFactoryInterface $requestFactory, string $chronicleUri)
+	{
 		$this->client = $client;
-		$this->signingSecretKey = $signingSecretKey;
-		$this->chroniclePublicKey = $chroniclePublicKey;
+		$this->requestFactory = $requestFactory;
 		$this->chronicleUri = $chronicleUri;
+	}
+
+	public function authorize(SigningSecretKey $signingSecretKey, string $chronicleClientId)
+	{
+		$this->signingSecretKey = $signingSecretKey;
 		$this->chronicleClientId = $chronicleClientId;
 	}
 
 	public function lastHash(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/lasthash', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/lasthash',
+					$this->chronicleUri
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function lookup(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/lookup/%s', $this->chronicleUri, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/lookup/%s',
+					$this->chronicleUri,
+					\urlencode($hash)
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function since(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/since/%s', $this->chronicleUri, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/since/%s',
+					$this->chronicleUri,
+					\urlencode($hash)
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function export(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/export', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/export',
+					$this->chronicleUri
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function index(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle',
+					$this->chronicleUri
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function register(SigningPublicKey $publicKey, string $comment = null): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		/** @var RequestInterface $request */
-		$request = $adapter->createSignedJsonRequest(
-			'POST',
-			\sprintf('%s/chronicle/register', $this->chronicleUri),
-			[
-				'publickey' => $publicKey->getString(),
-				'comment' => $comment,
-			],
-			$this->signingSecretKey
-		)->withAddedHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
+		return \json_decode(
+			(string) $this->client->sendRequest($this->signRequest(
+				$this->requestFactory->createRequest(
+					'POST',
+					\sprintf('%s/chronicle/register', $this->chronicleUri)
+				)->withBody(Stream::fromString(\json_encode([
+					'publickey' => $publicKey->getString(),
+					'comment' => $comment,
+				])))->withAddedHeader(
+					self::CHRONICLE_CLIENT_KEY_ID,
+					$this->chronicleClientId
+				)->withHeader('Content-Type', 'application/json'),
+				$this->signingSecretKey
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		/** @var RequestInterface $request */
-		$request = $adapter->createSignedJsonRequest(
-			'POST',
-			\sprintf('%s/chronicle/revoke', $this->chronicleUri),
-			[
-				'clientid' => $clientId,
-				'publickey' => $publicKey->getString(),
-			],
-			$this->signingSecretKey
-		)->withAddedHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
+		return \json_decode(
+			(string) $this->client->sendRequest($this->signRequest(
+				$this->requestFactory->createRequest(
+					'POST',
+					\sprintf('%s/chronicle/revoke', $this->chronicleUri)
+				)->withBody(Stream::fromString(\json_encode([
+					'clientid' => $clientId,
+					'publickey' => $publicKey->getString(),
+				])))->withAddedHeader(
+					self::CHRONICLE_CLIENT_KEY_ID,
+					$this->chronicleClientId
+				)->withHeader('Content-Type', 'application/json'),
+				$this->signingSecretKey
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function publish(string $message): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		/** @var RequestInterface $request */
-		$request = $adapter->createSignedRequest(
-			'POST',
-			\sprintf('%s/chronicle/publish', $this->chronicleUri),
-			$message,
-			$this->signingSecretKey
-		)->withAddedHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
+		return \json_decode(
+			(string) $this->client->sendRequest($this->signRequest(
+				$this->requestFactory->createRequest(
+					'POST',
+					\sprintf('%s/chronicle/publish', $this->chronicleUri)
+				)->withBody(Stream::fromString($message))->withAddedHeader(
+					self::CHRONICLE_CLIENT_KEY_ID,
+					$this->chronicleClientId
+				),
+				$this->signingSecretKey
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function replica(int $source): CommonEndpointInterface
 	{
 		return new Replica(
-			$this->sapient,
 			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
+			$this->requestFactory,
 			$this->chronicleUri,
 			$source
 		);
@@ -229,16 +207,26 @@ final class Api implements ApiInterface
 
 	public function replicas(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/replica', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/replica',
+					$this->chronicleUri
+				)
+			))->getBody(),
+			\true
+		);
+	}
+
+	private function signRequest(RequestInterface $request, SigningSecretKey $key): RequestInterface
+	{
+		return $request->withAddedHeader(
+			self::HEADER_SIGNATURE_NAME,
+			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+				(string) $request->getBody(),
+				$key->getString(\true)
+			))
 		);
 	}
 

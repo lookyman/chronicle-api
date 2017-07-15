@@ -5,18 +5,10 @@ declare(strict_types = 1);
 namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
-use ParagonIE\Sapient\Adapter\ConvenienceInterface;
-use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
-use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
-use ParagonIE\Sapient\Sapient;
+use Interop\Http\Factory\RequestFactoryInterface;
 
 final class Replica implements CommonEndpointInterface
 {
-
-	/**
-	 * @var Sapient
-	 */
-	private $sapient;
 
 	/**
 	 * @var HttpClient
@@ -24,14 +16,9 @@ final class Replica implements CommonEndpointInterface
 	private $client;
 
 	/**
-	 * @var SigningSecretKey
+	 * @var RequestFactoryInterface
 	 */
-	private $signingSecretKey;
-
-	/**
-	 * @var SigningPublicKey
-	 */
-	private $chroniclePublicKey;
+	private $requestFactory;
 
 	/**
 	 * @var string
@@ -44,81 +31,76 @@ final class Replica implements CommonEndpointInterface
 	private $source;
 
 	public function __construct(
-		Sapient $sapient,
 		HttpClient $client,
-		SigningSecretKey $signingSecretKey,
-		SigningPublicKey $chroniclePublicKey,
+		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
 		int $source
 	) {
-		$this->sapient = $sapient;
-		if (!$this->sapient->getAdapter() instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		$this->client = $client;
-		$this->signingSecretKey = $signingSecretKey;
-		$this->chroniclePublicKey = $chroniclePublicKey;
+		$this->requestFactory = $requestFactory;
 		$this->chronicleUri = $chronicleUri;
 		$this->source = $source;
 	}
 
 	public function lastHash(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/replica/%s/lasthash', $this->chronicleUri, $this->source),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/replica/%s/lasthash',
+					$this->chronicleUri,
+					$this->source
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function lookup(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/replica/%s/lookup/%s', $this->chronicleUri, $this->source, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/replica/%s/lookup/%s',
+					$this->chronicleUri,
+					$this->source,
+					\urlencode($hash)
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function since(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/replica/%s/since/%s', $this->chronicleUri, $this->source, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/replica/%s/since/%s',
+					$this->chronicleUri,
+					$this->source,
+					\urlencode($hash)
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
 	public function export(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
+		return \json_decode(
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
 				'GET',
-				\sprintf('%s/chronicle/replica/%s/export', $this->chronicleUri, $this->source),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
+				\sprintf(
+					'%s/chronicle/replica/%s/export',
+					$this->chronicleUri,
+					$this->source
+				)
+			))->getBody(),
+			\true
 		);
 	}
 
