@@ -13,6 +13,7 @@ use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 use ParagonIE\Sapient\Exception\HeaderMissingException;
 use ParagonIE\Sapient\Exception\InvalidMessageException;
 use ParagonIE\Sapient\Sapient;
+use Psr\Http\Message\RequestInterface;
 
 final class Api implements ApiInterface
 {
@@ -243,7 +244,8 @@ final class Api implements ApiInterface
 			'publickey' => $publicKey->getString(),
 			'comment' => $comment,
 		]);
-		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+		/** @var RequestInterface $request */
+		$request = $this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/register', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
@@ -255,7 +257,8 @@ final class Api implements ApiInterface
 				$message,
 				$this->signingSecretKey->getString(\true)
 			))
-		));
+		);
+		$response = $this->client->sendRequest($request);
 		$body = (string) $response->getBody();
 		$verified = $this->chroniclePublicKey === \null;
 		if ($this->chroniclePublicKey !== \null) {
@@ -289,7 +292,8 @@ final class Api implements ApiInterface
 			'clientid' => $clientId,
 			'publickey' => $publicKey->getString(),
 		]);
-		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+		/** @var RequestInterface $request */
+		$request = $this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/revoke', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
@@ -301,7 +305,8 @@ final class Api implements ApiInterface
 				$message,
 				$this->signingSecretKey->getString(\true)
 			))
-		));
+		);
+		$response = $this->client->sendRequest($request);
 		$body = (string) $response->getBody();
 		$verified = $this->chroniclePublicKey === \null;
 		if ($this->chroniclePublicKey !== \null) {
@@ -331,7 +336,8 @@ final class Api implements ApiInterface
 		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
 			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+		/** @var RequestInterface $request */
+		$request = $this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/publish', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
@@ -343,7 +349,8 @@ final class Api implements ApiInterface
 				$message,
 				$this->signingSecretKey->getString(\true)
 			))
-		));
+		);
+		$response = $this->client->sendRequest($request);
 		$body = (string) $response->getBody();
 		$verified = $this->chroniclePublicKey === \null;
 		if ($this->chroniclePublicKey !== \null) {
