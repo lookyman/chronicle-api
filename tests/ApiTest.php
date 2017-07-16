@@ -5,15 +5,12 @@ declare(strict_types = 1);
 namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
+use Interop\Http\Factory\RequestFactoryInterface;
 use PHPUnit\Framework\TestCase;
-use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\Sapient\Adapter\AdapterInterface;
-use ParagonIE\Sapient\Adapter\Guzzle;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
-use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
-use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * @covers \Lookyman\Chronicle\Api
@@ -21,387 +18,272 @@ use Psr\Http\Message\ResponseInterface;
 final class ApiTest extends TestCase
 {
 
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $adapter;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $sapient;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $client;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $signingSecretKey;
-
-	/**
-	 * @var \PHPUnit_Framework_MockObject_MockObject
-	 */
-	private $chroniclePublicKey;
-
-	/**
-	 * @var Api
-	 */
-	private $api;
-
-	protected function setUp()
-	{
-		$this->adapter = $this->createMock(Guzzle::class);
-		$this->sapient = $this->createMock(Sapient::class);
-		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->adapter);
-		$this->client = $this->createMock(HttpClient::class);
-		$this->signingSecretKey = $this->createMock(SigningSecretKey::class);
-		$this->chroniclePublicKey = $this->createMock(SigningPublicKey::class);
-		$this->api = new Api(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
-			'uri',
-			'clientId'
-		);
-	}
-
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testInvalidAdapter()
-	{
-		$this->sapient = $this->createMock(Sapient::class);
-		$this->sapient->expects(self::any())->method('getAdapter')->willReturn($this->createMock(AdapterInterface::class));
-		$this->api = new Api(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
-			'uri'
-		);
-	}
-
 	public function testLastHash()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/lasthash',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/lasthash'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->lastHash());
+		self::assertEquals(['result'], $api->lastHash());
 	}
 
 	public function testLookup()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/lookup/foo',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/lookup/foo'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->lookup('foo'));
+		self::assertEquals(['result'], $api->lookup('foo'));
 	}
 
 	public function testSince()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/since/foo',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/since/foo'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->since('foo'));
+		self::assertEquals(['result'], $api->since('foo'));
 	}
 
 	public function testExport()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/export',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/export'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->export());
+		self::assertEquals(['result'], $api->export());
 	}
 
 	public function testIndex()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->index());
+		self::assertEquals(['result'], $api->index());
 	}
 
 	/**
 	 * @expectedException \InvalidArgumentException
 	 */
-	public function testRegisterClientIdNotSet()
+	public function testRegisterUnauthorized()
 	{
-		$this->api = new Api(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
+		$client = $this->createMock(HttpClient::class);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+
+		$api = new Api(
+			$client,
+			$requestFactory,
 			'uri'
 		);
 
-		/** @var string $decodedPublicKey */
-		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
-		$publicKey = new SigningPublicKey($decodedPublicKey);
-
-		$this->api->register($publicKey);
+		$api->register($this->createMock(SigningPublicKey::class));
 	}
 
 	public function testRegister()
 	{
-		$request = $this->createMock(RequestInterface::class);
-		$request->expects(self::once())->method('withAddedHeader')->with(
-			Api::CHRONICLE_CLIENT_KEY_ID,
-			'clientId'
-		)->willReturn($request);
-
-		$response = $this->createMock(ResponseInterface::class);
-
-		/** @var string $decodedPublicKey */
-		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
-		$publicKey = new SigningPublicKey($decodedPublicKey);
-
-		$this->adapter->expects(self::once())->method('createSignedJsonRequest')->with(
-			'POST',
-			'uri/chronicle/register',
-			[
-				'publickey' => $publicKey->getString(),
-				'comment' => 'foo',
-			],
-			$this->signingSecretKey
-		)->willReturn($request);
-
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
-
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->register($publicKey, 'foo'));
+		self::markTestIncomplete('todo');
 	}
 
 	/**
 	 * @expectedException \InvalidArgumentException
 	 */
-	public function testRevokeClientIdNotSet()
+	public function testRevokeUnauthorized()
 	{
-		$this->api = new Api(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
+		$client = $this->createMock(HttpClient::class);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+
+		$api = new Api(
+			$client,
+			$requestFactory,
 			'uri'
 		);
 
-		/** @var string $decodedPublicKey */
-		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
-		$publicKey = new SigningPublicKey($decodedPublicKey);
-
-		$this->api->revoke('id', $publicKey);
+		$api->revoke('id', $this->createMock(SigningPublicKey::class));
 	}
 
 	public function testRevoke()
 	{
-		$request = $this->createMock(RequestInterface::class);
-		$request->expects(self::once())->method('withAddedHeader')->with(
-			Api::CHRONICLE_CLIENT_KEY_ID,
-			'clientId'
-		)->willReturn($request);
-
-		$response = $this->createMock(ResponseInterface::class);
-
-		/** @var string $decodedPublicKey */
-		$decodedPublicKey = Base64UrlSafe::decode('GB3bAfPYdFR7yCeIWeZ3Xm7hzmuFTrDnEnZtHhG1zjg=');
-		$publicKey = new SigningPublicKey($decodedPublicKey);
-
-		$this->adapter->expects(self::once())->method('createSignedJsonRequest')->with(
-			'POST',
-			'uri/chronicle/revoke',
-			[
-				'clientid' => 'id',
-				'publickey' => $publicKey->getString(),
-			],
-			$this->signingSecretKey
-		)->willReturn($request);
-
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
-
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->revoke('id', $publicKey));
+		self::markTestIncomplete('todo');
 	}
 
 	/**
 	 * @expectedException \InvalidArgumentException
 	 */
-	public function testPublishClientIdNotSet()
+	public function testPublishUnauthorized()
 	{
-		$this->api = new Api(
-			$this->sapient,
-			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
+		$client = $this->createMock(HttpClient::class);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+
+		$api = new Api(
+			$client,
+			$requestFactory,
 			'uri'
 		);
 
-		$this->api->publish('foo');
+		$api->publish('foo');
 	}
 
 	public function testPublish()
 	{
-		$request = $this->createMock(RequestInterface::class);
-		$request->expects(self::once())->method('withAddedHeader')->with(
-			Api::CHRONICLE_CLIENT_KEY_ID,
-			'clientId'
-		)->willReturn($request);
-
-		$response = $this->createMock(ResponseInterface::class);
-
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
-			'POST',
-			'uri/chronicle/publish',
-			'foo',
-			$this->signingSecretKey
-		)->willReturn($request);
-
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
-
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->publish('foo'));
+		self::markTestIncomplete('todo');
 	}
 
 	public function testReplica()
 	{
-		$replica = $this->api->replica(1);
-		self::assertInstanceOf(Replica::class, $replica);
+		$client = $this->createMock(HttpClient::class);
 
-		$reflectionPropertySapient = new \ReflectionProperty(Replica::class, 'sapient');
-		$reflectionPropertySapient->setAccessible(true);
-		self::assertSame($this->sapient, $reflectionPropertySapient->getValue($replica));
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
+
+		$replica = $api->replica(1);
 
 		$reflectionPropertyClient = new \ReflectionProperty(Replica::class, 'client');
-		$reflectionPropertyClient->setAccessible(true);
-		self::assertSame($this->client, $reflectionPropertyClient->getValue($replica));
+		$reflectionPropertyClient->setAccessible(\true);
+		self::assertSame($client, $reflectionPropertyClient->getValue($replica));
 
-		$reflectionPropertySigningSecretKey = new \ReflectionProperty(Replica::class, 'signingSecretKey');
-		$reflectionPropertySigningSecretKey->setAccessible(true);
-		self::assertSame($this->signingSecretKey, $reflectionPropertySigningSecretKey->getValue($replica));
-
-		$reflectionPropertyChroniclePublicKey = new \ReflectionProperty(Replica::class, 'chroniclePublicKey');
-		$reflectionPropertyChroniclePublicKey->setAccessible(true);
-		self::assertSame($this->chroniclePublicKey, $reflectionPropertyChroniclePublicKey->getValue($replica));
+		$reflectionPropertyRequestFactory = new \ReflectionProperty(Replica::class, 'requestFactory');
+		$reflectionPropertyRequestFactory->setAccessible(\true);
+		self::assertSame($requestFactory, $reflectionPropertyRequestFactory->getValue($replica));
 
 		$reflectionPropertyChronicleUri = new \ReflectionProperty(Replica::class, 'chronicleUri');
-		$reflectionPropertyChronicleUri->setAccessible(true);
-		self::assertSame('uri', $reflectionPropertyChronicleUri->getValue($replica));
+		$reflectionPropertyChronicleUri->setAccessible(\true);
+		self::assertEquals('uri', $reflectionPropertyChronicleUri->getValue($replica));
 
 		$reflectionPropertySource = new \ReflectionProperty(Replica::class, 'source');
-		$reflectionPropertySource->setAccessible(true);
-		self::assertSame(1, $reflectionPropertySource->getValue($replica));
+		$reflectionPropertySource->setAccessible(\true);
+		self::assertEquals(1, $reflectionPropertySource->getValue($replica));
 	}
 
 	public function testReplicas()
 	{
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
 		$request = $this->createMock(RequestInterface::class);
 
 		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
 
-		$this->adapter->expects(self::once())->method('createSignedRequest')->with(
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica',
-			'',
-			$this->signingSecretKey
+			'uri/chronicle/replica'
 		)->willReturn($request);
 
-		$this->sapient->expects(self::once())->method('decodeSignedJsonResponse')->with(
-			$response,
-			$this->chroniclePublicKey
-		)->willReturn(['result']);
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri'
+		);
 
-		$this->client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
-
-		self::assertEquals(['result'], $this->api->replicas());
+		self::assertEquals(['result'], $api->replicas());
 	}
 
 }

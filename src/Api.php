@@ -5,9 +5,13 @@ declare(strict_types = 1);
 namespace Lookyman\Chronicle;
 
 use Http\Client\HttpClient;
-use ParagonIE\Sapient\Adapter\ConvenienceInterface;
+use Interop\Http\Factory\RequestFactoryInterface;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\Sapient\Adapter\Generic\Stream;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
+use ParagonIE\Sapient\Exception\HeaderMissingException;
+use ParagonIE\Sapient\Exception\InvalidMessageException;
 use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\RequestInterface;
 
@@ -17,24 +21,14 @@ final class Api implements ApiInterface
 	const CHRONICLE_CLIENT_KEY_ID = 'Chronicle-Client-Key-ID';
 
 	/**
-	 * @var Sapient
-	 */
-	private $sapient;
-
-	/**
 	 * @var HttpClient
 	 */
 	private $client;
 
 	/**
-	 * @var SigningSecretKey
+	 * @var RequestFactoryInterface
 	 */
-	private $signingSecretKey;
-
-	/**
-	 * @var SigningPublicKey
-	 */
-	private $chroniclePublicKey;
+	private $requestFactory;
 
 	/**
 	 * @var string
@@ -42,204 +36,387 @@ final class Api implements ApiInterface
 	private $chronicleUri;
 
 	/**
+	 * @var SigningSecretKey|null
+	 */
+	private $signingSecretKey;
+
+	/**
 	 * @var string|null
 	 */
 	private $chronicleClientId;
 
+	/**
+	 * @var SigningPublicKey|null
+	 */
+	private $chroniclePublicKey;
+
 	public function __construct(
-		Sapient $sapient,
 		HttpClient $client,
-		SigningSecretKey $signingSecretKey,
-		SigningPublicKey $chroniclePublicKey,
+		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
-		string $chronicleClientId = null
+		SigningPublicKey $chroniclePublicKey = \null
 	) {
-		$this->sapient = $sapient;
-		if (!$this->sapient->getAdapter() instanceof ConvenienceInterface) {
-			throw new \InvalidArgumentException(\sprintf('Sapient adapter must be an instance of %s.', ConvenienceInterface::class));
-		}
 		$this->client = $client;
-		$this->signingSecretKey = $signingSecretKey;
-		$this->chroniclePublicKey = $chroniclePublicKey;
+		$this->requestFactory = $requestFactory;
 		$this->chronicleUri = $chronicleUri;
+		$this->chroniclePublicKey = $chroniclePublicKey;
+	}
+
+	public function authorize(SigningSecretKey $signingSecretKey, string $chronicleClientId)
+	{
+		$this->signingSecretKey = $signingSecretKey;
 		$this->chronicleClientId = $chronicleClientId;
 	}
 
 	public function lastHash(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle/lasthash', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle/lasthash',
+				$this->chronicleUri
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function lookup(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle/lookup/%s', $this->chronicleUri, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle/lookup/%s',
+				$this->chronicleUri,
+				\urlencode($hash)
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function since(string $hash): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle/since/%s', $this->chronicleUri, \urlencode($hash)),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle/since/%s',
+				$this->chronicleUri,
+				\urlencode($hash)
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function export(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle/export', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle/export',
+				$this->chronicleUri
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function index(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle',
+				$this->chronicleUri
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
-	public function register(SigningPublicKey $publicKey, string $comment = null): array
+	public function register(SigningPublicKey $publicKey, string $comment = \null): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
+		$message = \json_encode([
+			'publickey' => $publicKey->getString(),
+			'comment' => $comment,
+		]);
 		/** @var RequestInterface $request */
-		$request = $adapter->createSignedJsonRequest(
+		$request = $this->requestFactory->createRequest(
 			'POST',
-			\sprintf('%s/chronicle/register', $this->chronicleUri),
-			[
-				'publickey' => $publicKey->getString(),
-				'comment' => $comment,
-			],
-			$this->signingSecretKey
-		)->withAddedHeader(
+			\sprintf('%s/chronicle/register', $this->chronicleUri)
+		)->withBody(Stream::fromString($message))->withHeader(
 			self::CHRONICLE_CLIENT_KEY_ID,
 			$this->chronicleClientId
+		)->withHeader('Content-Type', 'application/json')->withHeader(
+			Sapient::HEADER_SIGNATURE_NAME,
+			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+				$message,
+				$this->signingSecretKey->getString(\true)
+			))
 		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($request);
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
+		$message = \json_encode([
+			'clientid' => $clientId,
+			'publickey' => $publicKey->getString(),
+		]);
 		/** @var RequestInterface $request */
-		$request = $adapter->createSignedJsonRequest(
+		$request = $this->requestFactory->createRequest(
 			'POST',
-			\sprintf('%s/chronicle/revoke', $this->chronicleUri),
-			[
-				'clientid' => $clientId,
-				'publickey' => $publicKey->getString(),
-			],
-			$this->signingSecretKey
-		)->withAddedHeader(
+			\sprintf('%s/chronicle/revoke', $this->chronicleUri)
+		)->withBody(Stream::fromString($message))->withHeader(
 			self::CHRONICLE_CLIENT_KEY_ID,
 			$this->chronicleClientId
+		)->withHeader('Content-Type', 'application/json')->withHeader(
+			Sapient::HEADER_SIGNATURE_NAME,
+			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+				$message,
+				$this->signingSecretKey->getString(\true)
+			))
 		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($request);
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function publish(string $message): array
 	{
-		if ($this->chronicleClientId === null) {
-			throw new \InvalidArgumentException('Client id was not set.');
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
+			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
 		/** @var RequestInterface $request */
-		$request = $adapter->createSignedRequest(
+		$request = $this->requestFactory->createRequest(
 			'POST',
-			\sprintf('%s/chronicle/publish', $this->chronicleUri),
-			$message,
-			$this->signingSecretKey
-		)->withAddedHeader(
+			\sprintf('%s/chronicle/publish', $this->chronicleUri)
+		)->withBody(Stream::fromString($message))->withHeader(
 			self::CHRONICLE_CLIENT_KEY_ID,
 			$this->chronicleClientId
+		)->withHeader(
+			Sapient::HEADER_SIGNATURE_NAME,
+			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+				$message,
+				$this->signingSecretKey->getString(\true)
+			))
 		);
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($request),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($request);
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 	public function replica(int $source): CommonEndpointInterface
 	{
 		return new Replica(
-			$this->sapient,
 			$this->client,
-			$this->signingSecretKey,
-			$this->chroniclePublicKey,
+			$this->requestFactory,
 			$this->chronicleUri,
-			$source
+			$source,
+			$this->chroniclePublicKey
 		);
 	}
 
 	public function replicas(): array
 	{
-		/** @var ConvenienceInterface $adapter */
-		$adapter = $this->sapient->getAdapter();
-		return $this->sapient->decodeSignedJsonResponse(
-			$this->client->sendRequest($adapter->createSignedRequest(
-				'GET',
-				\sprintf('%s/chronicle/replica', $this->chronicleUri),
-				'',
-				$this->signingSecretKey
-			)),
-			$this->chroniclePublicKey
-		);
+		$response = $this->client->sendRequest($this->requestFactory->createRequest(
+			'GET',
+			\sprintf(
+				'%s/chronicle/replica',
+				$this->chronicleUri
+			)
+		));
+		$body = (string) $response->getBody();
+		$verified = $this->chroniclePublicKey === \null;
+		if ($this->chroniclePublicKey !== \null) {
+			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
+			if (\count($headers) === 0) {
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+			}
+			foreach ($headers as $header) {
+				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
+					(string) Base64UrlSafe::decode($header),
+					$body,
+					$this->chroniclePublicKey->getString(\true)
+				)) {
+					$verified = \true;
+					break;
+				}
+			}
+		}
+		if ($verified) {
+			return \json_decode($body, \true);
+		}
+		throw new InvalidMessageException('No valid signature given for this HTTP response');
 	}
 
 }
