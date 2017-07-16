@@ -26,12 +26,12 @@ $api = new Api(
 	new Client(), // Client must implement Http\Client\HttpClient
 	new RequestFactory(), // RequestFactory must implement Interop\Http\Factory\RequestFactoryInterface
 	'https://chronicle.uri',
-	new SigningPublicKey(Base64UrlSafe::decode('chronicle public key')) // this is optional, omit if you don't care about validating API responses
+	new SigningPublicKey(Base64UrlSafe::decode('chronicle public key')) // optional, omit if you don't care about validating API responses
 );
 $api->lastHash();
 
-// you must authorize first before you can publish a message
-$api->authorize(
+// you must authenticate first before you can publish a message
+$api->authenticate(
 	new SigningSecretKey(Base64UrlSafe::decode('your secret key')),
 	'your client id'
 );

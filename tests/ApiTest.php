@@ -233,10 +233,13 @@ final class ApiTest extends TestCase
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		$replica = $api->replica(1);
@@ -256,6 +259,10 @@ final class ApiTest extends TestCase
 		$reflectionPropertySource = new \ReflectionProperty(Replica::class, 'source');
 		$reflectionPropertySource->setAccessible(\true);
 		self::assertEquals(1, $reflectionPropertySource->getValue($replica));
+
+		$reflectionPropertyChroniclePublicKey = new \ReflectionProperty(Replica::class, 'chroniclePublicKey');
+		$reflectionPropertyChroniclePublicKey->setAccessible(\true);
+		self::assertSame($publicKey, $reflectionPropertyChroniclePublicKey->getValue($replica));
 	}
 
 	public function testReplicas()
