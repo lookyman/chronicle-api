@@ -7,7 +7,9 @@ namespace Lookyman\Chronicle;
 use Http\Client\HttpClient;
 use Interop\Http\Factory\RequestFactoryInterface;
 use PHPUnit\Framework\TestCase;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
+use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -27,6 +29,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -37,10 +41,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle/lasthash'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->lastHash());
@@ -55,6 +64,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -65,10 +76,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle/lookup/foo'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->lookup('foo'));
@@ -83,6 +99,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -93,10 +111,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle/since/foo'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->since('foo'));
@@ -111,6 +134,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -121,10 +146,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle/export'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->export());
@@ -139,6 +169,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -149,10 +181,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->index());
@@ -274,6 +311,8 @@ final class ApiTest extends TestCase
 
 		$response = $this->createMock(ResponseInterface::class);
 		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
 		$client = $this->createMock(HttpClient::class);
 		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
@@ -284,10 +323,15 @@ final class ApiTest extends TestCase
 			'uri/chronicle/replica'
 		)->willReturn($request);
 
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
 		$api = new Api(
 			$client,
 			$requestFactory,
-			'uri'
+			'uri',
+			$publicKey
 		);
 
 		self::assertEquals(['result'], $api->replicas());
