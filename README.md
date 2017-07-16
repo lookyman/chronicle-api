@@ -11,12 +11,14 @@ Client library for interacting with [Chronicle](https://github.com/paragonie/chr
 ```php
 use Lookyman\Chronicle\Api;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 
 $api = new Api(
 	new Client(), // Client must implement Http\Client\HttpClient
 	new RequestFactory(), // RequestFactory must implement Interop\Http\Factory\RequestFactoryInterface
-	'https://chronicle.uri'
+	'https://chronicle.uri',
+	new SigningPublicKey(Base64UrlSafe::decode('chronicle public key')) // this is optional, omit if you don't care about validating API responses
 );
 $api->lastHash();
 
