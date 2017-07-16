@@ -7,6 +7,7 @@ Client library for interacting with [Chronicle](https://github.com/paragonie/chr
 [![Downloads](https://img.shields.io/packagist/dt/lookyman/chronicle-api.svg)](https://packagist.org/packages/lookyman/chronicle-api)
 [![Latest stable](https://img.shields.io/packagist/v/lookyman/chronicle-api.svg)](https://packagist.org/packages/lookyman/chronicle-api)
 [![PHPStan level](https://img.shields.io/badge/PHPStan-7-brightgreen.svg)](https://img.shields.io/badge/PHPStan-7-brightgreen.svg)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/lookyman/chronicle-api/blob/master/LICENSE)
 
 ## Installation
 
