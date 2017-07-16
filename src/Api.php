@@ -10,7 +10,6 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\Sapient\Adapter\Generic\Stream;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
-use Psr\Http\Message\RequestInterface;
 
 final class Api implements ApiInterface
 {
@@ -131,22 +130,26 @@ final class Api implements ApiInterface
 
 	public function register(SigningPublicKey $publicKey, string $comment = null): array
 	{
-		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
 			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
+		$body = Stream::fromString(\json_encode([
+			'publickey' => $publicKey->getString(),
+			'comment' => $comment,
+		]));
 		return \json_decode(
-			(string) $this->client->sendRequest($this->signRequest(
-				$this->requestFactory->createRequest(
-					'POST',
-					\sprintf('%s/chronicle/register', $this->chronicleUri)
-				)->withBody(Stream::fromString(\json_encode([
-					'publickey' => $publicKey->getString(),
-					'comment' => $comment,
-				])))->withAddedHeader(
-					self::CHRONICLE_CLIENT_KEY_ID,
-					$this->chronicleClientId
-				)->withHeader('Content-Type', 'application/json'),
-				$this->signingSecretKey
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
+				'POST',
+				\sprintf('%s/chronicle/register', $this->chronicleUri)
+			)->withBody($body)->withHeader(
+				self::CHRONICLE_CLIENT_KEY_ID,
+				$this->chronicleClientId
+			)->withHeader('Content-Type', 'application/json')->withHeader(
+				self::HEADER_SIGNATURE_NAME,
+				Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+					(string) $body,
+					$this->signingSecretKey->getString(\true)
+				))
 			))->getBody(),
 			\true
 		);
@@ -154,22 +157,26 @@ final class Api implements ApiInterface
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
-		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
 			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
+		$body = Stream::fromString(\json_encode([
+			'clientid' => $clientId,
+			'publickey' => $publicKey->getString(),
+		]));
 		return \json_decode(
-			(string) $this->client->sendRequest($this->signRequest(
-				$this->requestFactory->createRequest(
-					'POST',
-					\sprintf('%s/chronicle/revoke', $this->chronicleUri)
-				)->withBody(Stream::fromString(\json_encode([
-					'clientid' => $clientId,
-					'publickey' => $publicKey->getString(),
-				])))->withAddedHeader(
-					self::CHRONICLE_CLIENT_KEY_ID,
-					$this->chronicleClientId
-				)->withHeader('Content-Type', 'application/json'),
-				$this->signingSecretKey
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
+				'POST',
+				\sprintf('%s/chronicle/revoke', $this->chronicleUri)
+			)->withBody($body)->withHeader(
+				self::CHRONICLE_CLIENT_KEY_ID,
+				$this->chronicleClientId
+			)->withHeader('Content-Type', 'application/json')->withHeader(
+				self::HEADER_SIGNATURE_NAME,
+				Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+					(string) $body,
+					$this->signingSecretKey->getString(\true)
+				))
 			))->getBody(),
 			\true
 		);
@@ -177,19 +184,23 @@ final class Api implements ApiInterface
 
 	public function publish(string $message): array
 	{
-		if ($this->signingSecretKey === null || $this->chronicleClientId === null) {
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
 			throw new \InvalidArgumentException('First use the authorize() method to set credentials');
 		}
+		$body = Stream::fromString($message);
 		return \json_decode(
-			(string) $this->client->sendRequest($this->signRequest(
-				$this->requestFactory->createRequest(
-					'POST',
-					\sprintf('%s/chronicle/publish', $this->chronicleUri)
-				)->withBody(Stream::fromString($message))->withAddedHeader(
-					self::CHRONICLE_CLIENT_KEY_ID,
-					$this->chronicleClientId
-				),
-				$this->signingSecretKey
+			(string) $this->client->sendRequest($this->requestFactory->createRequest(
+				'POST',
+				\sprintf('%s/chronicle/publish', $this->chronicleUri)
+			)->withBody($body)->withHeader(
+				self::CHRONICLE_CLIENT_KEY_ID,
+				$this->chronicleClientId
+			)->withHeader(
+				self::HEADER_SIGNATURE_NAME,
+				Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+					(string) $body,
+					$this->signingSecretKey->getString(\true)
+				))
 			))->getBody(),
 			\true
 		);
@@ -216,17 +227,6 @@ final class Api implements ApiInterface
 				)
 			))->getBody(),
 			\true
-		);
-	}
-
-	private function signRequest(RequestInterface $request, SigningSecretKey $key): RequestInterface
-	{
-		return $request->withAddedHeader(
-			self::HEADER_SIGNATURE_NAME,
-			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
-				(string) $request->getBody(),
-				$key->getString(\true)
-			))
 		);
 	}
 
