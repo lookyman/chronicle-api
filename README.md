@@ -8,6 +8,14 @@ Client library for interacting with [Chronicle](https://github.com/paragonie/chr
 [![Latest stable](https://img.shields.io/packagist/v/lookyman/chronicle-api.svg)](https://packagist.org/packages/lookyman/chronicle-api)
 [![PHPStan level](https://img.shields.io/badge/PHPStan-7-brightgreen.svg)](https://img.shields.io/badge/PHPStan-7-brightgreen.svg)
 
+## Installation
+
+```sh
+composer require lookyman/chronicle-api
+```
+
+## Usage
+
 ```php
 use Lookyman\Chronicle\Api;
 use ParagonIE\ConstantTime\Base64UrlSafe;
