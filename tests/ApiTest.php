@@ -362,7 +362,50 @@ final class ApiTest extends TestCase
 
 	public function testPublish()
 	{
-		self::markTestIncomplete('todo');
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+
+		$request = $this->createMock(RequestInterface::class);
+		$request->expects(self::at(0))->method('withBody')->willReturn($request);
+		$request->expects(self::at(1))->method('withHeader')->with(
+			Api::CHRONICLE_CLIENT_KEY_ID,
+			'client'
+		)->willReturn($request);
+		$request->expects(self::at(2))->method('withHeader')->with(
+			Sapient::HEADER_SIGNATURE_NAME,
+			'O42hyULuTzw9atrnPjH4P4ePPgZHxDF0TLG3Co3xj0f7QPLharhEWRAVo7mHwqpNcaaOTh7LK2FnL9rCL1iLDA=='
+		)->willReturn($request);
+
+		$response = $this->createMock(ResponseInterface::class);
+		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
+			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
+
+		$client = $this->createMock(HttpClient::class);
+		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+
+		$requestFactory = $this->createMock(RequestFactoryInterface::class);
+		$requestFactory->expects(self::once())->method('createRequest')->with(
+			'POST',
+			'uri/chronicle/publish'
+		)->willReturn($request);
+
+		$publicKey = $this->createMock(SigningPublicKey::class);
+		$publicKey->expects(self::once())->method('getString')->with(\true)
+			->willReturn(Base64UrlSafe::decode('uW197cTmhf0MGDZU-NtWr1bsQ-MxSCzFa64mbjjl4MQ='));
+
+		$api = new Api(
+			$client,
+			$requestFactory,
+			'uri',
+			$publicKey
+		);
+		$api->authenticate(
+			new SigningSecretKey((string) Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
+			'client'
+		);
+
+		self::assertEquals(['result'], $api->publish('foo'));
 	}
 
 	public function testReplica()
