@@ -132,9 +132,12 @@ final class Api extends AbstractApi implements ApiInterface
 			'POST',
 			\sprintf('%s/chronicle/register', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
+			'Content-Type',
+			'application/json'
+		)->withHeader(
 			self::CHRONICLE_CLIENT_KEY_ID,
 			$this->chronicleClientId
-		)->withHeader('Content-Type', 'application/json')->withHeader(
+		)->withHeader(
 			Sapient::HEADER_SIGNATURE_NAME,
 			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
 				$message,
@@ -158,9 +161,12 @@ final class Api extends AbstractApi implements ApiInterface
 			'POST',
 			\sprintf('%s/chronicle/revoke', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
+			'Content-Type',
+			'application/json'
+		)->withHeader(
 			self::CHRONICLE_CLIENT_KEY_ID,
 			$this->chronicleClientId
-		)->withHeader('Content-Type', 'application/json')->withHeader(
+		)->withHeader(
 			Sapient::HEADER_SIGNATURE_NAME,
 			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
 				$message,

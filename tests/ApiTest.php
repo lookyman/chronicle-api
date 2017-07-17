@@ -223,12 +223,12 @@ final class ApiTest extends TestCase
 		$request = $this->createMock(RequestInterface::class);
 		$request->expects(self::at(0))->method('withBody')->willReturn($request);
 		$request->expects(self::at(1))->method('withHeader')->with(
-			Api::CHRONICLE_CLIENT_KEY_ID,
-			'client'
-		)->willReturn($request);
-		$request->expects(self::at(2))->method('withHeader')->with(
 			'Content-Type',
 			'application/json'
+		)->willReturn($request);
+		$request->expects(self::at(2))->method('withHeader')->with(
+			Api::CHRONICLE_CLIENT_KEY_ID,
+			'client'
 		)->willReturn($request);
 		$request->expects(self::at(3))->method('withHeader')->with(
 			Sapient::HEADER_SIGNATURE_NAME,
@@ -296,12 +296,12 @@ final class ApiTest extends TestCase
 		$request = $this->createMock(RequestInterface::class);
 		$request->expects(self::at(0))->method('withBody')->willReturn($request);
 		$request->expects(self::at(1))->method('withHeader')->with(
-			Api::CHRONICLE_CLIENT_KEY_ID,
-			'client'
-		)->willReturn($request);
-		$request->expects(self::at(2))->method('withHeader')->with(
 			'Content-Type',
 			'application/json'
+		)->willReturn($request);
+		$request->expects(self::at(2))->method('withHeader')->with(
+			Api::CHRONICLE_CLIENT_KEY_ID,
+			'client'
 		)->willReturn($request);
 		$request->expects(self::at(3))->method('withHeader')->with(
 			Sapient::HEADER_SIGNATURE_NAME,
