@@ -16,6 +16,7 @@ use Psr\Http\Message\StreamInterface;
 
 /**
  * @covers \Lookyman\Chronicle\Replica
+ * @covers \Lookyman\Chronicle\AbstractApi
  */
 final class ReplicaTest extends TestCase
 {

@@ -17,6 +17,7 @@ use Psr\Http\Message\StreamInterface;
 
 /**
  * @covers \Lookyman\Chronicle\Api
+ * @covers \Lookyman\Chronicle\AbstractApi
  */
 final class ApiTest extends TestCase
 {
@@ -441,7 +442,7 @@ final class ApiTest extends TestCase
 		$reflectionPropertySource->setAccessible(\true);
 		self::assertEquals(1, $reflectionPropertySource->getValue($replica));
 
-		$reflectionPropertyChroniclePublicKey = new \ReflectionProperty(Replica::class, 'chroniclePublicKey');
+		$reflectionPropertyChroniclePublicKey = new \ReflectionProperty(AbstractApi::class, 'chroniclePublicKey');
 		$reflectionPropertyChroniclePublicKey->setAccessible(\true);
 		self::assertSame($publicKey, $reflectionPropertyChroniclePublicKey->getValue($replica));
 	}
