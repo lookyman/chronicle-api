@@ -25,6 +25,7 @@ matrix:
 
 install:
   - travis_retry composer update --no-interaction --prefer-dist $DEPENDENCIES
+  - if [ "$COVERAGE" != "1" ]; then phpenv config-rm xdebug.ini; fi
 
 script:
   - if [ "$COVERAGE" != "1" ]; then composer check; fi
