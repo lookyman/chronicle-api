@@ -424,7 +424,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		$replica = $api->replica(1);
+		$replica = $api->replica('aaa');
 
 		$reflectionPropertyClient = new \ReflectionProperty(Replica::class, 'client');
 		$reflectionPropertyClient->setAccessible(\true);
@@ -440,7 +440,7 @@ final class ApiTest extends TestCase
 
 		$reflectionPropertySource = new \ReflectionProperty(Replica::class, 'source');
 		$reflectionPropertySource->setAccessible(\true);
-		self::assertEquals(1, $reflectionPropertySource->getValue($replica));
+		self::assertEquals('aaa', $reflectionPropertySource->getValue($replica));
 
 		$reflectionPropertyChroniclePublicKey = new \ReflectionProperty(AbstractApi::class, 'chroniclePublicKey');
 		$reflectionPropertyChroniclePublicKey->setAccessible(\true);

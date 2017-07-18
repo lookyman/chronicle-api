@@ -17,7 +17,7 @@ interface ApiInterface extends CommonEndpointInterface
 
 	public function publish(string $message): array;
 
-	public function replica(int $source): CommonEndpointInterface;
+	public function replica(string $source): CommonEndpointInterface;
 
 	public function replicas(): array;
 

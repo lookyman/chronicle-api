@@ -27,7 +27,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 	private $chronicleUri;
 
 	/**
-	 * @var int
+	 * @var string
 	 */
 	private $source;
 
@@ -35,7 +35,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 		HttpClient $client,
 		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
-		int $source,
+		string $source,
 		SigningPublicKey $chroniclePublicKey = \null
 	) {
 		parent::__construct($chroniclePublicKey);
@@ -52,7 +52,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 			\sprintf(
 				'%s/chronicle/replica/%s/lasthash',
 				$this->chronicleUri,
-				$this->source
+				\urlencode($this->source)
 			)
 		)));
 	}
@@ -64,7 +64,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 			\sprintf(
 				'%s/chronicle/replica/%s/lookup/%s',
 				$this->chronicleUri,
-				$this->source,
+				\urlencode($this->source),
 				\urlencode($hash)
 			)
 		)));
@@ -77,7 +77,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 			\sprintf(
 				'%s/chronicle/replica/%s/since/%s',
 				$this->chronicleUri,
-				$this->source,
+				\urlencode($this->source),
 				\urlencode($hash)
 			)
 		)));
@@ -90,7 +90,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 			\sprintf(
 				'%s/chronicle/replica/%s/export',
 				$this->chronicleUri,
-				$this->source
+				\urlencode($this->source)
 			)
 		)));
 	}

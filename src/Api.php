@@ -198,7 +198,7 @@ final class Api extends AbstractApi implements ApiInterface
 		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
 	}
 
-	public function replica(int $source): CommonEndpointInterface
+	public function replica(string $source): CommonEndpointInterface
 	{
 		return new Replica(
 			$this->client,

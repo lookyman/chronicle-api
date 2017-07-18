@@ -39,7 +39,7 @@ final class ReplicaTest extends TestCase
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/lasthash'
+			'uri/chronicle/replica/aaa/lasthash'
 		)->willReturn($request);
 
 		$publicKey = $this->createMock(SigningPublicKey::class);
@@ -50,7 +50,7 @@ final class ReplicaTest extends TestCase
 			$client,
 			$requestFactory,
 			'uri',
-			1,
+			'aaa',
 			$publicKey
 		);
 
@@ -75,7 +75,7 @@ final class ReplicaTest extends TestCase
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/lookup/foo'
+			'uri/chronicle/replica/aaa/lookup/foo'
 		)->willReturn($request);
 
 		$publicKey = $this->createMock(SigningPublicKey::class);
@@ -86,7 +86,7 @@ final class ReplicaTest extends TestCase
 			$client,
 			$requestFactory,
 			'uri',
-			1,
+			'aaa',
 			$publicKey
 		);
 
@@ -111,7 +111,7 @@ final class ReplicaTest extends TestCase
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/since/foo'
+			'uri/chronicle/replica/aaa/since/foo'
 		)->willReturn($request);
 
 		$publicKey = $this->createMock(SigningPublicKey::class);
@@ -122,7 +122,7 @@ final class ReplicaTest extends TestCase
 			$client,
 			$requestFactory,
 			'uri',
-			1,
+			'aaa',
 			$publicKey
 		);
 
@@ -147,7 +147,7 @@ final class ReplicaTest extends TestCase
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
 			'GET',
-			'uri/chronicle/replica/1/export'
+			'uri/chronicle/replica/aaa/export'
 		)->willReturn($request);
 
 		$publicKey = $this->createMock(SigningPublicKey::class);
@@ -158,7 +158,7 @@ final class ReplicaTest extends TestCase
 			$client,
 			$requestFactory,
 			'uri',
-			1,
+			'aaa',
 			$publicKey
 		);
 
