@@ -11,6 +11,7 @@ use ParagonIE\Sapient\Adapter\Generic\Stream;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 use ParagonIE\Sapient\Sapient;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 
 final class Api extends AbstractApi implements ApiInterface
@@ -120,81 +121,45 @@ final class Api extends AbstractApi implements ApiInterface
 
 	public function register(SigningPublicKey $publicKey, string $comment = \null): array
 	{
-		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
-		}
 		$message = \json_encode([
 			'publickey' => $publicKey->getString(),
 			'comment' => $comment,
 		]);
 		/** @var RequestInterface $request */
-		$request = $this->requestFactory->createRequest(
+		$request = $this->authenticateAndSignMessage($this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/register', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
 			'Content-Type',
 			'application/json'
-		)->withHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		)->withHeader(
-			Sapient::HEADER_SIGNATURE_NAME,
-			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
-				$message,
-				$this->signingSecretKey->getString(\true)
-			))
-		);
+		));
 		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
 	}
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
-		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
-		}
 		$message = \json_encode([
 			'clientid' => $clientId,
 			'publickey' => $publicKey->getString(),
 		]);
 		/** @var RequestInterface $request */
-		$request = $this->requestFactory->createRequest(
+		$request = $this->authenticateAndSignMessage($this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/revoke', $this->chronicleUri)
 		)->withBody(Stream::fromString($message))->withHeader(
 			'Content-Type',
 			'application/json'
-		)->withHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		)->withHeader(
-			Sapient::HEADER_SIGNATURE_NAME,
-			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
-				$message,
-				$this->signingSecretKey->getString(\true)
-			))
-		);
+		));
 		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
 	}
 
 	public function publish(string $message): array
 	{
-		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
-		}
 		/** @var RequestInterface $request */
-		$request = $this->requestFactory->createRequest(
+		$request = $this->authenticateAndSignMessage($this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/publish', $this->chronicleUri)
-		)->withBody(Stream::fromString($message))->withHeader(
-			self::CHRONICLE_CLIENT_KEY_ID,
-			$this->chronicleClientId
-		)->withHeader(
-			Sapient::HEADER_SIGNATURE_NAME,
-			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
-				$message,
-				$this->signingSecretKey->getString(\true)
-			))
-		);
+		)->withBody(Stream::fromString($message)));
 		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
 	}
 
@@ -218,6 +183,23 @@ final class Api extends AbstractApi implements ApiInterface
 				$this->chronicleUri
 			)
 		)));
+	}
+
+	private function authenticateAndSignMessage(MessageInterface $request): MessageInterface
+	{
+		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
+			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
+		}
+		return $request->withHeader(
+			self::CHRONICLE_CLIENT_KEY_ID,
+			$this->chronicleClientId
+		)->withHeader(
+			Sapient::HEADER_SIGNATURE_NAME,
+			Base64UrlSafe::encode(\ParagonIE_Sodium_Compat::crypto_sign_detached(
+				(string) $request->getBody(),
+				$this->signingSecretKey->getString(\true)
+			))
+		);
 	}
 
 }
