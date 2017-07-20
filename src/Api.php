@@ -121,7 +121,7 @@ final class Api extends AbstractApi implements ApiInterface
 	public function register(SigningPublicKey $publicKey, string $comment = \null): array
 	{
 		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new \InvalidArgumentException('First use the authenticate() method to set credentials');
+			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
 		}
 		$message = \json_encode([
 			'publickey' => $publicKey->getString(),
@@ -150,7 +150,7 @@ final class Api extends AbstractApi implements ApiInterface
 	public function revoke(string $clientId, SigningPublicKey $publicKey): array
 	{
 		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new \InvalidArgumentException('First use the authenticate() method to set credentials');
+			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
 		}
 		$message = \json_encode([
 			'clientid' => $clientId,
@@ -179,7 +179,7 @@ final class Api extends AbstractApi implements ApiInterface
 	public function publish(string $message): array
 	{
 		if ($this->signingSecretKey === \null || $this->chronicleClientId === \null) {
-			throw new \InvalidArgumentException('First use the authenticate() method to set credentials');
+			throw new UnauthenticatedException('First use the authenticate() method to set credentials');
 		}
 		/** @var RequestInterface $request */
 		$request = $this->requestFactory->createRequest(

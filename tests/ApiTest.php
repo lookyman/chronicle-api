@@ -198,7 +198,7 @@ final class ApiTest extends TestCase
 	}
 
 	/**
-	 * @expectedException \InvalidArgumentException
+	 * @expectedException \Lookyman\Chronicle\UnauthenticatedException
 	 */
 	public function testRegisterUnauthorized()
 	{
@@ -271,7 +271,7 @@ final class ApiTest extends TestCase
 	}
 
 	/**
-	 * @expectedException \InvalidArgumentException
+	 * @expectedException \Lookyman\Chronicle\UnauthenticatedException
 	 */
 	public function testRevokeUnauthorized()
 	{
@@ -344,7 +344,7 @@ final class ApiTest extends TestCase
 	}
 
 	/**
-	 * @expectedException \InvalidArgumentException
+	 * @expectedException \Lookyman\Chronicle\UnauthenticatedException
 	 */
 	public function testPublishUnauthorized()
 	{
