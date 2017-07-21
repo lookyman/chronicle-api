@@ -38,3 +38,5 @@ $api->authenticate(
 );
 $api->publish('hello world');
 ```
+
+For implementations of client and request factory, you can use for example [Guzzle 6 HTTP Adapter](https://github.com/php-http/guzzle6-adapter) and [HTTP Factory for Guzzle](https://github.com/http-interop/http-factory-guzzle) respectively.
