@@ -197,28 +197,14 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->index());
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testRegisterUnauthorized()
-	{
-		$client = $this->createMock(HttpClient::class);
-
-		$requestFactory = $this->createMock(RequestFactoryInterface::class);
-
-		$api = new Api(
-			$client,
-			$requestFactory,
-			'uri'
-		);
-
-		$api->register($this->createMock(SigningPublicKey::class));
-	}
-
 	public function testRegister()
 	{
-		$stream = $this->createMock(StreamInterface::class);
-		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+		$requestStream = $this->createMock(StreamInterface::class);
+		$requestStream->expects(self::once())->method('__toString')
+			->willReturn('{"publickey":"aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q=","comment":"foo"}');
+
+		$responseStream = $this->createMock(StreamInterface::class);
+		$responseStream->expects(self::once())->method('__toString')->willReturn('["result"]');
 
 		$request = $this->createMock(RequestInterface::class);
 		$request->expects(self::at(0))->method('withBody')->willReturn($request);
@@ -230,13 +216,14 @@ final class ApiTest extends TestCase
 			Api::CHRONICLE_CLIENT_KEY_ID,
 			'client'
 		)->willReturn($request);
-		$request->expects(self::at(3))->method('withHeader')->with(
+		$request->expects(self::at(3))->method('getBody')->willReturn($requestStream);
+		$request->expects(self::at(4))->method('withHeader')->with(
 			Sapient::HEADER_SIGNATURE_NAME,
 			'iGV5WcBp7A3eHFeb2OeM9n1i0dPOC5_DsnAvl7p29XUWWjvqSJ827v3Gw8zM8H4hvfyEWAlf8CZ0wvaUpdtZDA=='
 		)->willReturn($request);
 
 		$response = $this->createMock(ResponseInterface::class);
-		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getBody')->willReturn($responseStream);
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
@@ -270,28 +257,14 @@ final class ApiTest extends TestCase
 		));
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testRevokeUnauthorized()
-	{
-		$client = $this->createMock(HttpClient::class);
-
-		$requestFactory = $this->createMock(RequestFactoryInterface::class);
-
-		$api = new Api(
-			$client,
-			$requestFactory,
-			'uri'
-		);
-
-		$api->revoke('id', $this->createMock(SigningPublicKey::class));
-	}
-
 	public function testRevoke()
 	{
-		$stream = $this->createMock(StreamInterface::class);
-		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+		$requestStream = $this->createMock(StreamInterface::class);
+		$requestStream->expects(self::once())->method('__toString')
+			->willReturn('{"clientid":"foo","publickey":"aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q="}');
+
+		$responseStream = $this->createMock(StreamInterface::class);
+		$responseStream->expects(self::once())->method('__toString')->willReturn('["result"]');
 
 		$request = $this->createMock(RequestInterface::class);
 		$request->expects(self::at(0))->method('withBody')->willReturn($request);
@@ -303,13 +276,14 @@ final class ApiTest extends TestCase
 			Api::CHRONICLE_CLIENT_KEY_ID,
 			'client'
 		)->willReturn($request);
-		$request->expects(self::at(3))->method('withHeader')->with(
+		$request->expects(self::at(3))->method('getBody')->willReturn($requestStream);
+		$request->expects(self::at(4))->method('withHeader')->with(
 			Sapient::HEADER_SIGNATURE_NAME,
 			'q0ILXTcSkyl75zsJgh_6fnGGiRrQpnz8QkQNjfNY6LaDPbCr4mXnWs33KY-lqMPH-9qg9pybHxr3WszznrjmCw=='
 		)->willReturn($request);
 
 		$response = $this->createMock(ResponseInterface::class);
-		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getBody')->willReturn($responseStream);
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
@@ -343,28 +317,14 @@ final class ApiTest extends TestCase
 		));
 	}
 
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function testPublishUnauthorized()
-	{
-		$client = $this->createMock(HttpClient::class);
-
-		$requestFactory = $this->createMock(RequestFactoryInterface::class);
-
-		$api = new Api(
-			$client,
-			$requestFactory,
-			'uri'
-		);
-
-		$api->publish('foo');
-	}
-
 	public function testPublish()
 	{
-		$stream = $this->createMock(StreamInterface::class);
-		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
+		$requestStream = $this->createMock(StreamInterface::class);
+		$requestStream->expects(self::once())->method('__toString')
+			->willReturn('foo');
+
+		$responseStream = $this->createMock(StreamInterface::class);
+		$responseStream->expects(self::once())->method('__toString')->willReturn('["result"]');
 
 		$request = $this->createMock(RequestInterface::class);
 		$request->expects(self::at(0))->method('withBody')->willReturn($request);
@@ -372,13 +332,14 @@ final class ApiTest extends TestCase
 			Api::CHRONICLE_CLIENT_KEY_ID,
 			'client'
 		)->willReturn($request);
-		$request->expects(self::at(2))->method('withHeader')->with(
+		$request->expects(self::at(2))->method('getBody')->willReturn($requestStream);
+		$request->expects(self::at(3))->method('withHeader')->with(
 			Sapient::HEADER_SIGNATURE_NAME,
 			'O42hyULuTzw9atrnPjH4P4ePPgZHxDF0TLG3Co3xj0f7QPLharhEWRAVo7mHwqpNcaaOTh7LK2FnL9rCL1iLDA=='
 		)->willReturn($request);
 
 		$response = $this->createMock(ResponseInterface::class);
-		$response->expects(self::once())->method('getBody')->willReturn($stream);
+		$response->expects(self::once())->method('getBody')->willReturn($responseStream);
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
