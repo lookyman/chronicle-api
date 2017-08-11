@@ -4,7 +4,8 @@ declare(strict_types = 1);
 
 namespace Lookyman\Chronicle;
 
-use Http\Client\HttpClient;
+use Http\Client\HttpAsyncClient;
+use Http\Promise\FulfilledPromise;
 use Interop\Http\Factory\RequestFactoryInterface;
 use PHPUnit\Framework\TestCase;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -33,8 +34,10 @@ final class ReplicaTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -54,7 +57,7 @@ final class ReplicaTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $replica->lastHash());
+		self::assertEquals(['result'], $replica->lastHash()->wait());
 	}
 
 	public function testLookup()
@@ -69,8 +72,10 @@ final class ReplicaTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -90,7 +95,7 @@ final class ReplicaTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $replica->lookup('foo'));
+		self::assertEquals(['result'], $replica->lookup('foo')->wait());
 	}
 
 	public function testSince()
@@ -105,8 +110,10 @@ final class ReplicaTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -126,7 +133,7 @@ final class ReplicaTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $replica->since('foo'));
+		self::assertEquals(['result'], $replica->since('foo')->wait());
 	}
 
 	public function testExport()
@@ -141,8 +148,10 @@ final class ReplicaTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -162,7 +171,7 @@ final class ReplicaTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $replica->export());
+		self::assertEquals(['result'], $replica->export()->wait());
 	}
 
 }
