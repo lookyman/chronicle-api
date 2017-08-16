@@ -24,19 +24,21 @@ use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
 use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 
 $api = new Api(
-	new Client(), // Client must implement Http\Client\HttpClient
+	new Client(), // Client must implement Http\Client\HttpAsyncClient
 	new RequestFactory(), // RequestFactory must implement Interop\Http\Factory\RequestFactoryInterface
 	'https://chronicle.uri',
 	new SigningPublicKey(Base64UrlSafe::decode('chronicle public key')) // optional, omit if you don't care about validating API responses
 );
-$api->lastHash();
+var_dump($api->lastHash()->wait());
 
 // you must authenticate first before you can publish a message
 $api->authenticate(
 	new SigningSecretKey(Base64UrlSafe::decode('your secret key')),
 	'your client id'
 );
-$api->publish('hello world');
+var_dump($api->publish('hello world')->wait());
 ```
 
 For implementations of client and request factory, you can use for example [Guzzle 6 HTTP Adapter](https://github.com/php-http/guzzle6-adapter) and [HTTP Factory for Guzzle](https://github.com/http-interop/http-factory-guzzle) respectively.
+
+All endpoints return `Http\Promise\Promise`, so you can either just `->wait()` for the response, or handle it asynchronously with `->then()`. Responses are just plain arrays, look up the structure in the Chronicle's documentation.

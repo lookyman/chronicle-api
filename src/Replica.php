@@ -4,15 +4,17 @@ declare(strict_types = 1);
 
 namespace Lookyman\Chronicle;
 
-use Http\Client\HttpClient;
+use Http\Client\HttpAsyncClient;
+use Http\Promise\Promise;
 use Interop\Http\Factory\RequestFactoryInterface;
 use ParagonIE\Sapient\CryptographyKeys\SigningPublicKey;
+use Psr\Http\Message\ResponseInterface;
 
 final class Replica extends AbstractApi implements CommonEndpointInterface
 {
 
 	/**
-	 * @var HttpClient
+	 * @var HttpAsyncClient
 	 */
 	private $client;
 
@@ -32,7 +34,7 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 	private $source;
 
 	public function __construct(
-		HttpClient $client,
+		HttpAsyncClient $client,
 		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
 		string $source,
@@ -45,21 +47,23 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 		$this->source = $source;
 	}
 
-	public function lastHash(): array
+	public function lastHash(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/replica/%s/lasthash',
 				$this->chronicleUri,
 				\urlencode($this->source)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function lookup(string $hash): array
+	public function lookup(string $hash): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/replica/%s/lookup/%s',
@@ -67,12 +71,14 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 				\urlencode($this->source),
 				\urlencode($hash)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function since(string $hash): array
+	public function since(string $hash): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/replica/%s/since/%s',
@@ -80,19 +86,23 @@ final class Replica extends AbstractApi implements CommonEndpointInterface
 				\urlencode($this->source),
 				\urlencode($hash)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function export(): array
+	public function export(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/replica/%s/export',
 				$this->chronicleUri,
 				\urlencode($this->source)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
 }

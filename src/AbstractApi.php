@@ -39,7 +39,7 @@ abstract class AbstractApi
 		if ($this->chroniclePublicKey !== \null) {
 			$headers = $response->getHeader(Sapient::HEADER_SIGNATURE_NAME);
 			if (\count($headers) === 0) {
-				throw new HeaderMissingException(\sprintf('No signed response header (%s) found.', Sapient::HEADER_SIGNATURE_NAME));
+				throw new HeaderMissingException(\sprintf('No signed response header (%s) found', Sapient::HEADER_SIGNATURE_NAME));
 			}
 			foreach ($headers as $header) {
 				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
@@ -52,10 +52,10 @@ abstract class AbstractApi
 				}
 			}
 		}
-		if ($verified) {
-			return \json_decode($body, \true);
+		if (!$verified) {
+			throw new InvalidMessageException('No valid signature given for this HTTP response');
 		}
-		throw new InvalidMessageException('No valid signature given for this HTTP response');
+		return \json_decode($body, \true);
 	}
 
 }

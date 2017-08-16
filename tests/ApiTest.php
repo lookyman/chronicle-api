@@ -4,7 +4,8 @@ declare(strict_types = 1);
 
 namespace Lookyman\Chronicle;
 
-use Http\Client\HttpClient;
+use Http\Client\HttpAsyncClient;
+use Http\Promise\FulfilledPromise;
 use Interop\Http\Factory\RequestFactoryInterface;
 use PHPUnit\Framework\TestCase;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -34,8 +35,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -54,7 +57,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->lastHash());
+		self::assertEquals(['result'], $api->lastHash()->wait());
 	}
 
 	public function testLookup()
@@ -69,8 +72,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -89,7 +94,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->lookup('foo'));
+		self::assertEquals(['result'], $api->lookup('foo')->wait());
 	}
 
 	public function testSince()
@@ -104,8 +109,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -124,7 +131,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->since('foo'));
+		self::assertEquals(['result'], $api->since('foo')->wait());
 	}
 
 	public function testExport()
@@ -139,8 +146,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -159,7 +168,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->export());
+		self::assertEquals(['result'], $api->export()->wait());
 	}
 
 	public function testIndex()
@@ -174,8 +183,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -194,7 +205,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->index());
+		self::assertEquals(['result'], $api->index()->wait());
 	}
 
 	public function testRegister()
@@ -227,8 +238,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -254,7 +267,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->register(
 			new SigningPublicKey((string) Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q=')),
 			'foo'
-		));
+		)->wait());
 	}
 
 	public function testRevoke()
@@ -287,8 +300,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -314,7 +329,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->revoke(
 			'foo',
 			new SigningPublicKey((string) Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q='))
-		));
+		)->wait());
 	}
 
 	public function testPublish()
@@ -343,8 +358,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -367,12 +384,12 @@ final class ApiTest extends TestCase
 			'client'
 		);
 
-		self::assertEquals(['result'], $api->publish('foo'));
+		self::assertEquals(['result'], $api->publish('foo')->wait());
 	}
 
 	public function testReplica()
 	{
-		$client = $this->createMock(HttpClient::class);
+		$client = $this->createMock(HttpAsyncClient::class);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 
@@ -420,8 +437,10 @@ final class ApiTest extends TestCase
 		$response->expects(self::once())->method('getHeader')->with(Sapient::HEADER_SIGNATURE_NAME)
 			->willReturn(['Ypkdmzl7uoEmsNf5htTSmRFWKYpQskL5p3ffMjEQq4oHrwrkhQfJ1Pu9v9NF7Mth5Foa6JfSsJLcveU33pUtAQ==']);
 
-		$client = $this->createMock(HttpClient::class);
-		$client->expects(self::once())->method('sendRequest')->with($request)->willReturn($response);
+		$promise = new FulfilledPromise($response);
+
+		$client = $this->createMock(HttpAsyncClient::class);
+		$client->expects(self::once())->method('sendAsyncRequest')->with($request)->willReturn($promise);
 
 		$requestFactory = $this->createMock(RequestFactoryInterface::class);
 		$requestFactory->expects(self::once())->method('createRequest')->with(
@@ -440,7 +459,7 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 
-		self::assertEquals(['result'], $api->replicas());
+		self::assertEquals(['result'], $api->replicas()->wait());
 	}
 
 }

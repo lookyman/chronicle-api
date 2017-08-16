@@ -4,7 +4,8 @@ declare(strict_types = 1);
 
 namespace Lookyman\Chronicle;
 
-use Http\Client\HttpClient;
+use Http\Client\HttpAsyncClient;
+use Http\Promise\Promise;
 use Interop\Http\Factory\RequestFactoryInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\Sapient\Adapter\Generic\Stream;
@@ -13,6 +14,7 @@ use ParagonIE\Sapient\CryptographyKeys\SigningSecretKey;
 use ParagonIE\Sapient\Sapient;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 final class Api extends AbstractApi implements ApiInterface
 {
@@ -20,7 +22,7 @@ final class Api extends AbstractApi implements ApiInterface
 	const CHRONICLE_CLIENT_KEY_ID = 'Chronicle-Client-Key-ID';
 
 	/**
-	 * @var HttpClient
+	 * @var HttpAsyncClient
 	 */
 	private $client;
 
@@ -45,7 +47,7 @@ final class Api extends AbstractApi implements ApiInterface
 	private $chronicleClientId;
 
 	public function __construct(
-		HttpClient $client,
+		HttpAsyncClient $client,
 		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
 		SigningPublicKey $chroniclePublicKey = \null
@@ -62,64 +64,74 @@ final class Api extends AbstractApi implements ApiInterface
 		$this->chronicleClientId = $chronicleClientId;
 	}
 
-	public function lastHash(): array
+	public function lastHash(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/lasthash',
 				$this->chronicleUri
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function lookup(string $hash): array
+	public function lookup(string $hash): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/lookup/%s',
 				$this->chronicleUri,
 				\urlencode($hash)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function since(string $hash): array
+	public function since(string $hash): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/since/%s',
 				$this->chronicleUri,
 				\urlencode($hash)
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function export(): array
+	public function export(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/export',
 				$this->chronicleUri
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function index(): array
+	public function index(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle',
 				$this->chronicleUri
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function register(SigningPublicKey $publicKey, string $comment = \null): array
+	public function register(SigningPublicKey $publicKey, string $comment = \null): Promise
 	{
 		$message = \json_encode([
 			'publickey' => $publicKey->getString(),
@@ -133,10 +145,12 @@ final class Api extends AbstractApi implements ApiInterface
 			'Content-Type',
 			'application/json'
 		));
-		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
+		return $this->client->sendAsyncRequest($request)->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function revoke(string $clientId, SigningPublicKey $publicKey): array
+	public function revoke(string $clientId, SigningPublicKey $publicKey): Promise
 	{
 		$message = \json_encode([
 			'clientid' => $clientId,
@@ -150,17 +164,21 @@ final class Api extends AbstractApi implements ApiInterface
 			'Content-Type',
 			'application/json'
 		));
-		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
+		return $this->client->sendAsyncRequest($request)->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
-	public function publish(string $message): array
+	public function publish(string $message): Promise
 	{
 		/** @var RequestInterface $request */
 		$request = $this->authenticateAndSignMessage($this->requestFactory->createRequest(
 			'POST',
 			\sprintf('%s/chronicle/publish', $this->chronicleUri)
 		)->withBody(Stream::fromString($message)));
-		return $this->verifyAndReturnResponse($this->client->sendRequest($request));
+		return $this->client->sendAsyncRequest($request)->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
 	public function replica(string $source): CommonEndpointInterface
@@ -174,15 +192,17 @@ final class Api extends AbstractApi implements ApiInterface
 		);
 	}
 
-	public function replicas(): array
+	public function replicas(): Promise
 	{
-		return $this->verifyAndReturnResponse($this->client->sendRequest($this->requestFactory->createRequest(
+		return $this->client->sendAsyncRequest($this->requestFactory->createRequest(
 			'GET',
 			\sprintf(
 				'%s/chronicle/replica',
 				$this->chronicleUri
 			)
-		)));
+		))->then(function (ResponseInterface $response) {
+			return $this->verifyAndReturnResponse($response);
+		});
 	}
 
 	private function authenticateAndSignMessage(MessageInterface $request): MessageInterface
