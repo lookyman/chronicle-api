@@ -1,6 +1,5 @@
 <?php
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Lookyman\Chronicle;
 
@@ -22,7 +21,7 @@ use Psr\Http\Message\StreamInterface;
 final class ReplicaTest extends TestCase
 {
 
-	public function testLastHash()
+	public function testLastHash(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -60,7 +59,7 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $replica->lastHash()->wait());
 	}
 
-	public function testLookup()
+	public function testLookup(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -98,7 +97,7 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $replica->lookup('foo')->wait());
 	}
 
-	public function testSince()
+	public function testSince(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -136,7 +135,7 @@ final class ReplicaTest extends TestCase
 		self::assertEquals(['result'], $replica->since('foo')->wait());
 	}
 
-	public function testExport()
+	public function testExport(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');

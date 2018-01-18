@@ -1,6 +1,5 @@
 <?php
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Lookyman\Chronicle;
 
@@ -19,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 final class Api extends AbstractApi implements ApiInterface
 {
 
-	const CHRONICLE_CLIENT_KEY_ID = 'Chronicle-Client-Key-ID';
+	public const CHRONICLE_CLIENT_KEY_ID = 'Chronicle-Client-Key-ID';
 
 	/**
 	 * @var HttpAsyncClient
@@ -50,7 +49,7 @@ final class Api extends AbstractApi implements ApiInterface
 		HttpAsyncClient $client,
 		RequestFactoryInterface $requestFactory,
 		string $chronicleUri,
-		SigningPublicKey $chroniclePublicKey = \null
+		?SigningPublicKey $chroniclePublicKey = \null
 	) {
 		parent::__construct($chroniclePublicKey);
 		$this->client = $client;
@@ -58,7 +57,7 @@ final class Api extends AbstractApi implements ApiInterface
 		$this->chronicleUri = $chronicleUri;
 	}
 
-	public function authenticate(SigningSecretKey $signingSecretKey, string $chronicleClientId)
+	public function authenticate(SigningSecretKey $signingSecretKey, string $chronicleClientId): void
 	{
 		$this->signingSecretKey = $signingSecretKey;
 		$this->chronicleClientId = $chronicleClientId;

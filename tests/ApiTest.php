@@ -1,6 +1,5 @@
 <?php
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Lookyman\Chronicle;
 
@@ -23,7 +22,7 @@ use Psr\Http\Message\StreamInterface;
 final class ApiTest extends TestCase
 {
 
-	public function testLastHash()
+	public function testLastHash(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -60,7 +59,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->lastHash()->wait());
 	}
 
-	public function testLookup()
+	public function testLookup(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -97,7 +96,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->lookup('foo')->wait());
 	}
 
-	public function testSince()
+	public function testSince(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -134,7 +133,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->since('foo')->wait());
 	}
 
-	public function testExport()
+	public function testExport(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -171,7 +170,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->export()->wait());
 	}
 
-	public function testIndex()
+	public function testIndex(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');
@@ -208,7 +207,7 @@ final class ApiTest extends TestCase
 		self::assertEquals(['result'], $api->index()->wait());
 	}
 
-	public function testRegister()
+	public function testRegister(): void
 	{
 		$requestStream = $this->createMock(StreamInterface::class);
 		$requestStream->expects(self::once())->method('__toString')
@@ -260,17 +259,17 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 		$api->authenticate(
-			new SigningSecretKey((string) Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
+			new SigningSecretKey(Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
 			'client'
 		);
 
 		self::assertEquals(['result'], $api->register(
-			new SigningPublicKey((string) Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q=')),
+			new SigningPublicKey(Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q=')),
 			'foo'
 		)->wait());
 	}
 
-	public function testRevoke()
+	public function testRevoke(): void
 	{
 		$requestStream = $this->createMock(StreamInterface::class);
 		$requestStream->expects(self::once())->method('__toString')
@@ -322,17 +321,17 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 		$api->authenticate(
-			new SigningSecretKey((string) Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
+			new SigningSecretKey(Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
 			'client'
 		);
 
 		self::assertEquals(['result'], $api->revoke(
 			'foo',
-			new SigningPublicKey((string) Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q='))
+			new SigningPublicKey(Base64UrlSafe::decode('aAtpZ1BH8GbmKbXx7IN7_pTN9fM9WwGiZmKUajsLi6Q='))
 		)->wait());
 	}
 
-	public function testPublish()
+	public function testPublish(): void
 	{
 		$requestStream = $this->createMock(StreamInterface::class);
 		$requestStream->expects(self::once())->method('__toString')
@@ -380,14 +379,14 @@ final class ApiTest extends TestCase
 			$publicKey
 		);
 		$api->authenticate(
-			new SigningSecretKey((string) Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
+			new SigningSecretKey(Base64UrlSafe::decode('v4hyJ3AHsLUVVcqpBjtnNZ98CazBqrnIZ-Ek5mnTMo4PdTH7Yv-B8ZBgruHUi2jq_7CC74XHJE-0c0LCMDTmwQ==')),
 			'client'
 		);
 
 		self::assertEquals(['result'], $api->publish('foo')->wait());
 	}
 
-	public function testReplica()
+	public function testReplica(): void
 	{
 		$client = $this->createMock(HttpAsyncClient::class);
 
@@ -425,7 +424,7 @@ final class ApiTest extends TestCase
 		self::assertSame($publicKey, $reflectionPropertyChroniclePublicKey->getValue($replica));
 	}
 
-	public function testReplicas()
+	public function testReplicas(): void
 	{
 		$stream = $this->createMock(StreamInterface::class);
 		$stream->expects(self::once())->method('__toString')->willReturn('["result"]');

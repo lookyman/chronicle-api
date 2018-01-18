@@ -1,6 +1,5 @@
 <?php
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Lookyman\Chronicle;
 
@@ -19,15 +18,12 @@ abstract class AbstractApi
 	 */
 	private $chroniclePublicKey;
 
-	public function __construct(SigningPublicKey $chroniclePublicKey = \null)
+	public function __construct(?SigningPublicKey $chroniclePublicKey = \null)
 	{
 		$this->chroniclePublicKey = $chroniclePublicKey;
 	}
 
-	/**
-	 * @return SigningPublicKey|null
-	 */
-	protected function getChroniclePublicKey()
+	protected function getChroniclePublicKey(): ?SigningPublicKey
 	{
 		return $this->chroniclePublicKey;
 	}
@@ -43,7 +39,7 @@ abstract class AbstractApi
 			}
 			foreach ($headers as $header) {
 				if (\ParagonIE_Sodium_Compat::crypto_sign_verify_detached(
-					(string) Base64UrlSafe::decode($header),
+					Base64UrlSafe::decode($header),
 					$body,
 					$this->chroniclePublicKey->getString(\true)
 				)) {

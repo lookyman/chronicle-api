@@ -1,6 +1,5 @@
 <?php
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Lookyman\Chronicle;
 
@@ -12,7 +11,7 @@ interface ApiInterface extends CommonEndpointInterface
 
 	public function index(): Promise;
 
-	public function register(SigningPublicKey $publicKey, string $comment = null): Promise;
+	public function register(SigningPublicKey $publicKey, ?string $comment = null): Promise;
 
 	public function revoke(string $clientId, SigningPublicKey $publicKey): Promise;
 
